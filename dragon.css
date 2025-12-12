@@ -1,237 +1,93 @@
-/* Inherit some basics but mostly custom game styles */
 body {
     margin: 0;
     overflow: hidden;
-    background-color: #1a1a1a;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Press Start 2P', cursive;
+    /* Minecraft font feel */
+    background-color: #87CEEB;
+    /* Sky blue */
 }
 
-canvas {
-    display: block;
-    image-rendering: pixelated;
-    /* Critical for retro look */
+#blocker {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
 }
 
-/* UI Overlay */
-#game-ui {
+#instructions {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+#ui-layer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    /* Let clicks pass through to canvas mostly */
 }
 
-/* HUD */
-.hud-top {
+#crosshair {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    pointer-events: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
 }
 
-.health-bar-container,
-.xp-bar-container {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 5px;
-    border-radius: 8px;
-    border: 2px solid #fff;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.hp-label,
-.xp-label {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    color: #fff;
-}
-
-.hp-bar {
-    width: 150px;
-    height: 15px;
-    background: #555;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.hp-fill {
-    width: 100%;
-    height: 100%;
-    background: #ff4d4d;
-    transition: width 0.3s ease;
-}
-
-.xp-bar {
-    width: 100px;
-    height: 10px;
-    background: #555;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.xp-fill {
-    width: 0%;
-    height: 100%;
-    background: #3a86ff;
-    transition: width 0.3s ease;
-}
-
-.level-badge {
-    background: #7b2cbf;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 50%;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    border: 2px solid #fff;
-    box-shadow: 0 4px 0 #4a1a75;
-}
-
-/* Dialogue Box */
-#dialogue-box {
+#hotbar {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 80%;
-    max-width: 600px;
-    background: #fff;
-    border: 4px solid #000;
-    padding: 20px;
-    border-radius: 10px;
-    font-family: 'Press Start 2P', cursive;
-    pointer-events: auto;
-    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.5);
-}
-
-#dialogue-box.hidden {
-    display: none;
-}
-
-#dialogue-speaker {
-    font-size: 12px;
-    color: #7b2cbf;
-    margin-bottom: 10px;
-}
-
-#dialogue-text {
-    font-size: 14px;
-    line-height: 1.8;
-    color: #333;
-    margin-bottom: 15px;
-}
-
-#dialogue-next {
-    float: right;
-    background: none;
-    border: none;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    cursor: pointer;
-    color: #555;
-    animation: bounce 1s infinite;
-}
-
-/* Quest Log */
-#quest-log {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    font-family: 'Outfit', sans-serif;
-    pointer-events: auto;
-}
-
-#quest-log h3 {
-    font-size: 14px;
-    color: #ffd700;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-#quest-log p {
-    font-size: 14px;
-}
-
-/* Start Screen */
-.game-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1a0b2e 0%, #2f1c4e 100%);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    z-index: 100;
-    pointer-events: auto;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
 }
 
-.game-title {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 3rem;
-    text-align: center;
-    color: #ffd700;
-    text-shadow: 4px 4px 0 #b35900;
-    margin-bottom: 1rem;
-    line-height: 1.5;
+.slot {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #555;
+    background-size: cover;
+    background-color: #333;
+    /* Fallback */
 }
 
-.game-subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 3rem;
-    color: #ccc;
+.slot.active {
+    border-color: #fff;
+    transform: scale(1.1);
 }
 
-.pixel-btn {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 16px;
-    padding: 20px 40px;
-    background: #ff4d4d;
-    border: none;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 6px 0 #990000;
-    transition: transform 0.1s, box-shadow 0.1s;
+/* Procedural Colors for slots since I don't have images handy yet */
+.slot[data-type="grass"] {
+    background-color: #579e49;
 }
 
-.pixel-btn:active {
-    transform: translateY(6px);
-    box-shadow: 0 0 0 #990000;
+.slot[data-type="dirt"] {
+    background-color: #70543e;
 }
 
-.controls-hint {
-    margin-top: 3rem;
-    color: #888;
-    font-size: 0.9rem;
+.slot[data-type="stone"] {
+    background-color: #7d7d7d;
 }
 
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(3px);
-    }
-}
-
-.hidden {
-    display: none !important;
+.slot[data-type="wood"] {
+    background-color: #855e42;
 }

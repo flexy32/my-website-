@@ -1,292 +1,242 @@
-const canvas = document.getElementById('worldCanvas');
-const ctx = canvas.getContext('2d');
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-// Game State
-let gameState = 'MENU'; // MENU, PLAYING, DIALOGUE
-let lastTime = 0;
+let camera, scene, renderer, controls;
+const objects = [];
+let raycaster;
 
-// Resize Canvas
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let canJump = false;
 
-// --- Game Objects ---
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
 
-const TILE_SIZE = 48;
+let blockType = 'grass';
+const materials = {};
 
-const PLAYER = {
-    x: 0,
-    y: 0,
-    width: 32,
-    height: 32,
-    speed: 200, // Pixels per second
-    color: '#3a86ff',
-    hp: 100,
-    maxHp: 100,
-    xp: 0,
-    level: 1,
-    direction: 'down'
-};
+init();
+animate();
 
-// Simple Camera
-const CAMERA = {
-    x: 0,
-    y: 0
-};
+function init() {
+    // Scene Setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB); // Sky Blue
+    scene.fog = new THREE.Fog(0x87CEEB, 0, 750);
 
-// World Data (Simple randomized tiles for now)
-const WORLD_WIDTH = 2000;
-const WORLD_HEIGHT = 2000;
-const TREES = [];
-const COINS = [];
-const NPCS = [
-    { x: 400, y: 300, name: "Elder Sage", dialog: ["Greetings, traveler!", "The Dragon has been seen north of here.", "Be careful."] }
-];
+    // Lights
+    const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 2.5);
+    light.position.set(0.5, 1, 0.75);
+    scene.add(light);
 
-// Initialize World
-function initWorld() {
-    PLAYER.x = WORLD_WIDTH / 2;
-    PLAYER.y = WORLD_HEIGHT / 2;
+    // Camera
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.y = 10;
 
-    // Generate random trees
-    for (let i = 0; i < 50; i++) {
-        TREES.push({
-            x: Math.random() * WORLD_WIDTH,
-            y: Math.random() * WORLD_HEIGHT,
-            width: 40,
-            height: 60
-        });
-    }
+    // Controls
+    controls = new PointerLockControls(camera, document.body);
 
-    // Generate Coins
-    for (let i = 0; i < 20; i++) {
-        COINS.push({
-            x: Math.random() * WORLD_WIDTH,
-            y: Math.random() * WORLD_HEIGHT,
-            radius: 8,
-            collected: false
-        });
-    }
-}
+    const blocker = document.getElementById('blocker');
+    const instructions = document.getElementById('instructions');
 
-// Input Handling
-const keys = {
-    w: false, a: false, s: false, d: false,
-    ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false,
-    e: false // Interact
-};
+    instructions.addEventListener('click', function () {
+        controls.lock();
+    });
 
-window.addEventListener('keydown', e => {
-    if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-    if (e.key === 'e') interact();
-});
+    controls.addEventListener('lock', function () {
+        instructions.style.display = 'none';
+        blocker.style.display = 'none';
+    });
 
-window.addEventListener('keyup', e => {
-    if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-});
+    controls.addEventListener('unlock', function () {
+        blocker.style.display = 'block';
+        instructions.style.display = '';
+    });
 
-// Interaction Logic
-function interact() {
-    if (gameState === 'DIALOGUE') {
-        // Next dialogue or close
-        advanceDialogue();
-        return;
-    }
+    scene.add(controls.getObject());
 
-    // Check NPC proximity
-    for (let npc of NPCS) {
-        let dist = Math.hypot(PLAYER.x - npc.x, PLAYER.y - npc.y);
-        if (dist < 80) {
-            startDialogue(npc);
-            return;
+    // Controls Listeners
+    const onKeyDown = function (event) {
+        switch (event.code) {
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = true;
+                break;
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = true;
+                break;
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = true;
+                break;
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = true;
+                break;
+            case 'Space':
+                if (canJump === true) velocity.y += 350;
+                canJump = false;
+                break;
+        }
+    };
+
+    const onKeyUp = function (event) {
+        switch (event.code) {
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = false;
+                break;
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = false;
+                break;
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = false;
+                break;
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = false;
+                break;
+        }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    // World Generation (Simple Flat Voxel Plane)
+    raycaster = new THREE.Raycaster();
+
+    // Create Basic Materials (Colors for now to avoid loading external texture files)
+    const boxGeometry = new THREE.BoxGeometry(50, 50, 50);
+
+    // We can map colors or simple canvas textures here
+    materials.grass = new THREE.MeshLambertMaterial({ color: 0x579e49 });
+    materials.dirt = new THREE.MeshLambertMaterial({ color: 0x70543e });
+    materials.stone = new THREE.MeshLambertMaterial({ color: 0x7d7d7d });
+    materials.wood = new THREE.MeshLambertMaterial({ color: 0x855e42 });
+
+    // Generate Floor
+    const floorSize = 20;
+    for (let x = -floorSize; x <= floorSize; x++) {
+        for (let z = -floorSize; z <= floorSize; z++) {
+            // Random height variation for "terrain"
+            let y = 0;
+            if (Math.random() > 0.9) y = 50;
+
+            const voxel = new THREE.Mesh(boxGeometry, materials.grass);
+            voxel.position.set(x * 50, y, z * 50);
+            scene.add(voxel);
+            objects.push(voxel);
         }
     }
+
+    // Interaction (Place/Break)
+    document.addEventListener('mousedown', onMouseDown);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    window.addEventListener('resize', onWindowResize);
+
+    // Hotbar Logic
+    const slots = document.querySelectorAll('.slot');
+    slots.forEach(slot => {
+        slot.addEventListener('click', (e) => {
+            document.querySelector('.slot.active').classList.remove('active');
+            slot.classList.add('active');
+            blockType = slot.dataset.type;
+        });
+    });
 }
 
-// --- Dialogue System ---
-let currentDialogueNode = 0;
-let currentNpc = null;
-
-function startDialogue(npc) {
-    gameState = 'DIALOGUE';
-    currentNpc = npc;
-    currentDialogueNode = 0;
-
-    document.getElementById('dialogue-box').classList.remove('hidden');
-    document.getElementById('dialogue-speaker').textContent = npc.name;
-    document.getElementById('dialogue-text').textContent = npc.dialog[0];
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function advanceDialogue() {
-    currentDialogueNode++;
-    if (currentDialogueNode >= currentNpc.dialog.length) {
-        // End dialogue
-        gameState = 'PLAYING';
-        document.getElementById('dialogue-box').classList.add('hidden');
-        return;
-    }
-    document.getElementById('dialogue-text').textContent = currentNpc.dialog[currentDialogueNode];
-}
+function onMouseDown(event) {
+    if (!controls.isLocked) return;
 
-document.getElementById('dialogue-next').addEventListener('click', advanceDialogue);
+    // 0 = Left (Break), 2 = Right (Place)
+    raycaster.setFromCamera(new THREE.Vector2(), camera);
+    const intersects = raycaster.intersectObjects(objects, false);
 
+    if (intersects.length > 0) {
+        const intersect = intersects[0];
 
-// --- Main Loop ---
-
-function update(dt) {
-    if (gameState !== 'PLAYING') return;
-
-    // Movement
-    let dx = 0;
-    let dy = 0;
-
-    if (keys.w || keys.ArrowUp) dy = -1;
-    if (keys.s || keys.ArrowDown) dy = 1;
-    if (keys.a || keys.ArrowLeft) dx = -1;
-    if (keys.d || keys.ArrowRight) dx = 1;
-
-    // Normalize diagonal
-    if (dx !== 0 && dy !== 0) {
-        const length = Math.sqrt(dx * dx + dy * dy);
-        dx /= length;
-        dy /= length;
-    }
-
-    PLAYER.x += dx * PLAYER.speed * dt;
-    PLAYER.y += dy * PLAYER.speed * dt;
-
-    // World Bounds
-    PLAYER.x = Math.max(0, Math.min(PLAYER.x, WORLD_WIDTH));
-    PLAYER.y = Math.max(0, Math.min(PLAYER.y, WORLD_HEIGHT));
-
-    // Update Camera to follow player
-    CAMERA.x = PLAYER.x - canvas.width / 2;
-    CAMERA.y = PLAYER.y - canvas.height / 2;
-
-    // Clamp Camera
-    CAMERA.x = Math.max(0, Math.min(CAMERA.x, WORLD_WIDTH - canvas.width));
-    CAMERA.y = Math.max(0, Math.min(CAMERA.y, WORLD_HEIGHT - canvas.height));
-
-    // Collision Checks
-    checkCoinCollection();
-}
-
-function checkCoinCollection() {
-    COINS.forEach(coin => {
-        if (!coin.collected) {
-            let dist = Math.hypot(PLAYER.x - coin.x, PLAYER.y - coin.y);
-            if (dist < PLAYER.width + coin.radius) {
-                coin.collected = true;
-                PLAYER.xp += 10;
-                updateUI();
+        // Break Block
+        if (event.button === 0) {
+            // Don't delete infinite floor? For now let's allow it, but maybe limit bedrock.
+            if (intersect.object.position.y > -50) { // arbitrary limit
+                scene.remove(intersect.object);
+                objects.splice(objects.indexOf(intersect.object), 1);
             }
         }
-    });
-}
 
-function updateUI() {
-    document.getElementById('playerXp').style.width = Math.min((PLAYER.xp / 100) * 100, 100) + '%';
-    if (PLAYER.xp >= 100) {
-        PLAYER.level++;
-        PLAYER.xp = 0;
-        document.getElementById('level').textContent = PLAYER.level;
-    }
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(-CAMERA.x, -CAMERA.y);
-
-    // Draw Ground (Grass)
-    ctx.fillStyle = '#2d6a4f';
-    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-    // Draw Grid (Optional for depth)
-    ctx.strokeStyle = '#1b4332';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x <= WORLD_WIDTH; x += TILE_SIZE) {
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, WORLD_HEIGHT);
-    }
-    for (let y = 0; y <= WORLD_HEIGHT; y += TILE_SIZE) {
-        ctx.moveTo(0, y);
-        ctx.lineTo(WORLD_WIDTH, y);
-    }
-    ctx.stroke();
-
-    // Draw Trees
-    ctx.fillStyle = '#081c15';
-    TREES.forEach(tree => {
-        // Simple Triangle Tree
-        ctx.beginPath();
-        ctx.moveTo(tree.x, tree.y - tree.height);
-        ctx.lineTo(tree.x - tree.width / 2, tree.y);
-        ctx.lineTo(tree.x + tree.width / 2, tree.y);
-        ctx.fill();
-    });
-
-    // Draw Coins
-    ctx.fillStyle = '#ffd700';
-    COINS.forEach(coin => {
-        if (!coin.collected) {
-            ctx.beginPath();
-            ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
-            ctx.fill();
-            // Shine
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(coin.x - 2, coin.y - 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffd700';
+        // Place Block
+        if (event.button === 2) {
+            const voxel = new THREE.Mesh(new THREE.BoxGeometry(50, 50, 50), materials[blockType]);
+            voxel.position.copy(intersect.point).add(intersect.face.normal);
+            voxel.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+            scene.add(voxel);
+            objects.push(voxel);
         }
-    });
-
-    // Draw NPCs
-    ctx.fillStyle = '#7b2cbf';
-    NPCS.forEach(npc => {
-        ctx.fillRect(npc.x - 16, npc.y - 32, 32, 48);
-        // Label
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText("?", npc.x, npc.y - 40);
-        ctx.fillStyle = '#7b2cbf';
-    });
-
-    // Draw Player
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(PLAYER.x, PLAYER.y + 10, 12, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body
-    ctx.fillStyle = PLAYER.color;
-    ctx.fillRect(PLAYER.x - 16, PLAYER.y - 16, 32, 32);
-
-    ctx.restore();
+    }
 }
 
-function gameLoop(timestamp) {
-    let dt = (timestamp - lastTime) / 1000;
-    lastTime = timestamp;
+function animate() {
+    requestAnimationFrame(animate);
 
-    update(dt);
-    draw();
+    const time = performance.now();
 
-    requestAnimationFrame(gameLoop);
+    if (controls.isLocked === true) {
+        const delta = (time - prevTime) / 1000;
+
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+        direction.z = Number(moveForward) - Number(moveBackward);
+        direction.x = Number(moveRight) - Number(moveLeft);
+        direction.normalize(); // this ensures consistent movements in all directions
+
+        if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+        if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+
+        // On Object Detection (Simple Raycast downward)
+        raycaster.ray.origin.copy(controls.getObject().position);
+        raycaster.ray.origin.y -= 10;
+        const intersections = raycaster.intersectObjects(objects, false);
+        const onObject = intersections.length > 0;
+
+        if (onObject === true) {
+            velocity.y = Math.max(0, velocity.y);
+            canJump = true;
+        }
+
+        controls.moveRight(-velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
+
+        controls.getObject().position.y += (velocity.y * delta); // new behavior
+
+        // Simple floor collision backup
+        // if (controls.getObject().position.y < 10) {
+        //     velocity.y = 0;
+        //     controls.getObject().position.y = 10;
+        //     canJump = true;
+        // }
+    }
+
+    prevTime = time;
+
+    renderer.render(scene, camera);
 }
-
-// Start Game
-document.getElementById('start-btn').addEventListener('click', () => {
-    document.getElementById('start-screen').classList.add('hidden');
-    gameState = 'PLAYING';
-    initWorld();
-    requestAnimationFrame(gameLoop);
-});

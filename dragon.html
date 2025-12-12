@@ -4,57 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dragon Realm | Open World Adventure</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@300;400;700&display=swap"
-        rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css">
+    <title>Dragon Realm 3D | Voxel Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="dragon.css">
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 
 <body>
 
-    <div id="game-ui">
-        <div class="hud-top">
-            <div class="health-bar-container">
-                <div class="hp-label">HP</div>
-                <div class="hp-bar">
-                    <div class="hp-fill" id="playerHp"></div>
-                </div>
-            </div>
-            <div class="xp-bar-container">
-                <div class="xp-label">XP</div>
-                <div class="xp-bar">
-                    <div class="xp-fill" id="playerXp"></div>
-                </div>
-            </div>
-            <div class="level-badge">Lvl <span id="level">1</span></div>
-        </div>
-
-        <div id="dialogue-box" class="hidden">
-            <h3 id="dialogue-speaker">NPC Name</h3>
-            <p id="dialogue-text">Welcome to the Dragon Realm...</p>
-            <button id="dialogue-next">Next ▼</button>
-        </div>
-
-        <div id="quest-log">
-            <h3>Current Quest</h3>
-            <p id="quest-desc">Find the Village Elder.</p>
+    <div id="blocker">
+        <div id="instructions">
+            <h1 style="font-size: 36px">Dragon Realm 3D</h1>
+            <p style="font-size: 18px">
+                (Click to Play)<br /><br />
+                Move: WASD<br />
+                Jump: SPACE<br />
+                Look: MOUSE<br />
+                Build: Right Click<br />
+                Destroy: Left Click
+            </p>
         </div>
     </div>
 
-    <!-- Game World Canvas -->
-    <canvas id="worldCanvas"></canvas>
-
-    <!-- Overlay Screens -->
-    <div id="start-screen" class="game-overlay">
-        <h1 class="game-title">Dragon Realm</h1>
-        <p class="game-subtitle">A Mini Open World Adventure</p>
-        <button id="start-btn" class="pixel-btn">Enter World</button>
-        <div class="controls-hint">WASD / Arrows to Move • E to Interact • Space to Attack</div>
+    <div id="ui-layer">
+        <div id="crosshair">+</div>
+        <div id="hotbar">
+            <div class="slot active" data-type="grass"></div>
+            <div class="slot" data-type="dirt"></div>
+            <div class="slot" data-type="stone"></div>
+            <div class="slot" data-type="wood"></div>
+        </div>
     </div>
 
-    <script src="dragon.js"></script>
+    <!-- Main Game Script (Module) -->
+    <script type="module" src="dragon.js"></script>
 </body>
 
 </html>
