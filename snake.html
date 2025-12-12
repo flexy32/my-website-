@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game | Gaurav Bhattarai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="snake.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="logo">GB.</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="#" class="active">Snake Game</a></li>
+        </ul>
+        <div class="hamburger">
+            <i data-lucide="menu"></i>
+        </div>
+    </nav>
+
+    <main class="game-container">
+        <div class="game-header">
+            <h1 class="gradient-text">Snake Game</h1>
+            <p class="score-board">Score: <span id="score">0</span></p>
+        </div>
+
+        <div class="canvas-wrapper glass">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="startScreen" class="overlay">
+                <h2>Ready to Play?</h2>
+                <button id="startBtn" class="btn primary">Start Game</button>
+            </div>
+            <div id="gameOverScreen" class="overlay hidden">
+                <h2>Game Over!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <button id="restartBtn" class="btn primary">Play Again</button>
+            </div>
+        </div>
+
+        <div class="controls-info">
+            <p>Use <strong>Arrow Keys</strong> to move</p>
+        </div>
+
+        <!-- Mobile Controls -->
+        <div class="mobile-controls">
+            <div class="control-row">
+                <button class="d-pad" id="upBtn"><i data-lucide="arrow-up"></i></button>
+            </div>
+            <div class="control-row">
+                <button class="d-pad" id="leftBtn"><i data-lucide="arrow-left"></i></button>
+                <button class="d-pad" id="downBtn"><i data-lucide="arrow-down"></i></button>
+                <button class="d-pad" id="rightBtn"><i data-lucide="arrow-right"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <script src="snake.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
