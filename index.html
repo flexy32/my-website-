@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -31,12 +33,15 @@
             <div class="hero-content fade-in-up">
                 <span class="greeting">Hello, I'm</span>
                 <h1 class="gradient-text">Gaurav Bhattarai</h1>
-                <p class="subtitle">Student & Aspiring Tech Enthusiast</p>
+                <p class="subtitle">I am a <span id="typing-text"></span><span class="cursor">|</span></p>
                 <div class="cta-buttons">
                     <a href="#contact" class="btn primary">Get in Touch</a>
                     <a href="#about" class="btn secondary">Know More</a>
                 </div>
             </div>
+            <!-- Decorative background elements -->
+            <div class="glow-orb orb-1"></div>
+            <div class="glow-orb orb-2"></div>
         </section>
 
         <section id="about" class="section">
@@ -45,8 +50,39 @@
                 <div class="about-grid">
                     <div class="about-text">
                         <p>Namaste! I am <strong>Gaurav Bhattarai</strong>.</p>
-                        <p>I originally come from <strong>Bara</strong>, a beautiful district located in Province 2, in the Terai region of Nepal.</p>
-                        <p>I am passionate about learning new things, especially in the field of technology and science. I am currently focused on my higher secondary education, building a strong foundation for a future career.</p>
+                        <p>I originally come from <strong>Bara</strong>, a beautiful district located in Province 2, in
+                            the Terai region of Nepal.</p>
+                        <p>I am passionate about learning new things, especially in the field of technology and science.
+                            I am currently focused on my higher secondary education, building a strong foundation for a
+                            future career.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="section">
+            <div class="container fade-in-up">
+                <h2 class="section-title">My Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <i data-lucide="code-2" class="skill-icon"></i>
+                        <h3>Web Development</h3>
+                        <p>Learning HTML, CSS, & JavaScript</p>
+                    </div>
+                    <div class="skill-card">
+                        <i data-lucide="book-open" class="skill-icon"></i>
+                        <h3>Academics</h3>
+                        <p>Science & Technology Studies</p>
+                    </div>
+                    <div class="skill-card">
+                        <i data-lucide="pen-tool" class="skill-icon"></i>
+                        <h3>Creativity</h3>
+                        <p>Problem Solving & Design</p>
+                    </div>
+                    <div class="skill-card">
+                        <i data-lucide="users" class="skill-icon"></i>
+                        <h3>Communication</h3>
+                        <p>Teamwork & Leadership</p>
                     </div>
                 </div>
             </div>
@@ -101,9 +137,29 @@
         <p>&copy; 2025 Gaurav Bhattarai. All rights reserved.</p>
     </footer>
 
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay">
+        <div class="mobile-menu-content">
+            <div class="close-menu"><i data-lucide="x"></i></div>
+            <ul class="mobile-nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#education">Education</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <a href="#" class="scroll-top" id="scrollTop">
+        <i data-lucide="arrow-up"></i>
+    </a>
+
     <script src="script.js"></script>
     <script>
         lucide.createIcons();
     </script>
 </body>
+
 </html>
